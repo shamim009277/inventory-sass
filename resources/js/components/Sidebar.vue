@@ -26,7 +26,7 @@
                 </a>
                 <ul class="mm-collapse mm-show">
                     <li>
-                        <Link :href="route('dashboard')"><i class="bx bx-right-arrow-alt"></i>Email</Link>
+                        <Link :href="route('subscription-plans.create')"><i class="bx bx-right-arrow-alt"></i>Email</Link>
                     </li>
                 </ul>
             </li>
@@ -91,6 +91,13 @@ const menus = [
     title: 'Settings',
     icon: 'bx bx-cog',
     route: 'dashboard',
+  },
+  {
+    title: 'Subscription',
+    icon: 'bx bx-category',
+    children: [
+      { label: 'Plan List', route: 'subscription-plans.index' },
+    ],
   },
 ]
 </script>
