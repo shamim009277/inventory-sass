@@ -13,6 +13,7 @@ Route::get('dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
+    Route::put('/plans/{plan}/status', [SubscriptionPlanController::class, 'updateStatus']);
     Route::resource('subscription-plans', SubscriptionPlanController::class);
 });
 
