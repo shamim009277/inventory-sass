@@ -336,17 +336,23 @@
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="javascript:;"><i class="bx bx-user"></i><span>Profile</span></a></li>
-                            <li><a class="dropdown-item" href="javascript:;"><i class="bx bx-cog"></i><span>Settings</span></a></li>
-                            <li><a class="dropdown-item" href="javascript:;"><i class='bx bx-home-circle'></i><span>Dashboard</span></a></li>
+                            <li><a class="dropdown-item" href="javascript:;"><i
+                                        class="bx bx-user"></i><span>Profile</span></a></li>
+                            <li><a class="dropdown-item" href="javascript:;"><i
+                                        class="bx bx-cog"></i><span>Settings</span></a></li>
+                            <li><a class="dropdown-item" href="javascript:;"><i
+                                        class='bx bx-home-circle'></i><span>Dashboard</span></a></li>
                             <!-- <li><a class="dropdown-item" href="javascript:;"><i
                                         class='bx bx-dollar-circle'></i><span>Earnings</span></a>
                             </li>
                             <li><a class="dropdown-item" href="javascript:;"><i
                                         class='bx bx-download'></i><span>Downloads</span></a>
                             </li> -->
-                            <li><div class="dropdown-divider mb-0"></div></li>
-                            <li><a class="dropdown-item" href="javascript:;"><i class='bx bx-log-out-circle'></i><span>Logout</span></a></li>
+                            <li>
+                                <div class="dropdown-divider mb-0"></div>
+                            </li>
+                            <li><a class="dropdown-item" href="javascript:;"><i
+                                        class='bx bx-log-out-circle'></i><span>Logout</span></a></li>
                         </ul>
                     </div>
                 </nav>
@@ -357,29 +363,31 @@
         <div class="page-wrapper">
             <div class="page-content">
                 <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-2">
-					<div class="breadcrumb-title pe-3">Forms</div>
-					<div class="ps-3">
-						<nav aria-label="breadcrumb">
-							<ol class="breadcrumb mb-0 p-0">
-								<li class="breadcrumb-item"><a href="javascript:;"><i class="bx bx-home-alt"></i></a></li>
-								<li class="breadcrumb-item active" aria-current="page">Form Layouts</li>
-							</ol>
-						</nav>
-					</div>
-					<div class="ms-auto">
-						<div class="ps-3">
+                    <div class="breadcrumb-title pe-3">Forms</div>
+                    <div class="ps-3">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0 p-0">
+                                <li class="breadcrumb-item"><a href="javascript:;"><i class="bx bx-home-alt"></i></a>
+                                </li>
+                                <li class="breadcrumb-item active" aria-current="page">Form Layouts</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="ms-auto">
+                        <div class="ps-3">
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb mb-0 p-0">
-                                    <li class="breadcrumb-item"><a href="javascript:;"><i class="bx bx-home-alt"></i></a></li>
+                                    <li class="breadcrumb-item"><a href="javascript:;"><i
+                                                class="bx bx-home-alt"></i></a></li>
                                     <li class="breadcrumb-item active" aria-current="page">Form Layouts</li>
                                     <li class="breadcrumb-item active" aria-current="page">Form Layouts</li>
                                 </ol>
                             </nav>
                         </div>
-					</div>
-				</div>
+                    </div>
+                </div>
 
-               <slot />
+                <slot />
 
                 <!--end row-->
             </div>
@@ -394,8 +402,26 @@
     <!--end wrapper-->
 </template>
 
-<script lang="ts" setup>
+<script setup>
 import Sidebar from '@/components/Sidebar.vue';
+
+import { usePage } from '@inertiajs/vue3'
+import { onMounted, watch } from 'vue'
+import { toast } from 'vue3-toastify'
+
+const page = usePage()
+
+// Optional: Watch for flash changes
+watch(
+    () => page.props.flash,
+    (flash) => {
+        if (flash.success) toast.success(flash.success)
+        if (flash.error) toast.error(flash.error)
+        if (flash.warning) toast.warning(flash.warning)
+        if (flash.info) toast.info(flash.info)
+    },
+    { immediate: true }
+)
 </script>
 
 <style></style>

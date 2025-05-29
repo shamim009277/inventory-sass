@@ -7,6 +7,8 @@ import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 import { initializeTheme } from './composables/useAppearance';
+import 'vue3-toastify/dist/index.css'
+import Vue3Toastify from 'vue3-toastify'
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -27,10 +29,20 @@ createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob<DefineComponent>('./pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .use(ZiggyVue)
-            .mount(el);
+        const app = createApp({ render: () => h(App, props) })
+            app.use(plugin)
+            app.use(ZiggyVue)
+            app.use(Vue3Toastify, {
+                autoClose: 3000,
+                position: "top-right",
+                theme: 'colored',
+                pauseOnHover: true,
+                closeOnClick: true,
+                hideProgressBar: false,
+                draggable: true,
+                newestOnTop: true,
+            })
+            app.mount(el);
     },
     progress: {
         color: '#4B5563',

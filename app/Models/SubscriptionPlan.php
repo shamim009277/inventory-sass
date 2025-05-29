@@ -16,7 +16,6 @@ class SubscriptionPlan extends Model
         'duration',
         'interval',
         'is_active',
-        'created_by',
     ];
     protected $casts = [
         'price' => 'decimal:2',

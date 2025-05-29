@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Models\SubscriptionPlan;
+use App\Http\Requests\SubscriptionPlanRequest;
 
 class SubscriptionPlanController extends Controller
 {
@@ -14,8 +15,8 @@ class SubscriptionPlanController extends Controller
     public function index(Request $request)
     {
         $query = SubscriptionPlan::query();
-        if ($request->search) {
-            $search = $request->search;
+        $search = $request->input('search');
+        if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('price', 'like', "%{$search}%")
@@ -52,9 +53,14 @@ class SubscriptionPlanController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(SubscriptionPlanRequest $request)
     {
-        //
+        try {
+            SubscriptionPlan::create($request->validated());
+            return redirect()->back()->with('success', 'Subscription Plan created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -76,9 +82,15 @@ class SubscriptionPlanController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(SubscriptionPlanRequest $request, $id)
     {
-        //
+        try {
+            $plan = SubscriptionPlan::findOrFail($id);
+            $plan->update($request->validated());
+            return redirect()->back()->with('success', 'Subscription Plan updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -95,6 +107,6 @@ class SubscriptionPlanController extends Controller
             'is_active' => $request->boolean('is_active')
         ]);
 
-        return back();
+        return redirect()->back()->with('success', 'Status changed successfully.');
     }
 }

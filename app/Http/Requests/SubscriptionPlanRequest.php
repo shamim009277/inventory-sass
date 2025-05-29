@@ -15,6 +15,13 @@ class SubscriptionPlanRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'interval' => strtolower($this->interval),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -33,8 +40,15 @@ class SubscriptionPlanRequest extends FormRequest
         if ($this->isMethod('post')) {
             $rules['name'] = 'required|string|max:255|unique:subscription_plans,name';
         } elseif ($this->isMethod('put') || $this->isMethod('patch')) {
-            $rules['name'] = ['required','string','max:255',
-                Rule::unique('subscription_plans', 'name')->ignore($this->route('subscription_plan')?->id),
+            $rules['name'] = [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('subscription_plans', 'name')->ignore(
+                    is_object($this->route('subscription_plan'))
+                        ? $this->route('subscription_plan')->id
+                        : $this->route('subscription_plan')
+                )
             ];
         }
 

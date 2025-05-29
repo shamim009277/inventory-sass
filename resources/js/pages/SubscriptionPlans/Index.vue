@@ -5,6 +5,7 @@ import { ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
 
+
 const props = defineProps({
     plans: Object,
     filters: Object
@@ -13,14 +14,36 @@ const props = defineProps({
 const search = ref(props.filters.search || '');
 const perPage = ref(props.filters.perPage || 10);
 
+const showModal = ref(false);
+const editingPlan = ref(false);
+
 const form = useForm({
-     name: '',
-     price: '',
-     duration: '',
-     description: '',
-     interval:'',
-     is_active:''
+    name: '',
+    price: '',
+    duration: '',
+    description: '',
+    interval: '',
+    is_active: true
 });
+
+const createSubscription = () => {
+    showModal.value = true;
+    editingPlan.value = false;
+    form.reset();
+}
+
+const openEdit = (plan) => {
+    showModal.value = true;
+    editingPlan.value = plan;
+
+    form.name = plan.name;
+    form.price = plan.price;
+    form.duration = plan.duration;
+    form.description = plan.description;
+    form.interval = plan.interval;
+    form.is_active = plan.is_active;
+
+}
 
 const updateStatus = (plan) => {
     router.put(`/plans/${plan.id}/status`, {
@@ -28,10 +51,30 @@ const updateStatus = (plan) => {
     }, {
         preserveScroll: true,
         onSuccess: () => {
-            // Optionally show a toast or success message
+
         },
     });
 }
+
+const submit = () => {
+    if (editingPlan.value) {
+        form.put(`/subscription-plans/${editingPlan.value.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                showModal.value = false;
+            }
+        });
+    } else {
+        form.post('/subscription-plans', {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                showModal.value = false;
+            }
+        });
+    }
+};
 
 // Watchers
 watch([search, perPage], () => {
@@ -51,7 +94,6 @@ watch([search, perPage], () => {
         <div class="row">
             <div class="col-lg-12">
                 <h4 class="mb-3 text-primary text-center font-bold">Subscription Plans</h4>
-                <!-- <div class="pull-right"  style="margin-top: 25px;"></div>  -->
             </div>
             <div class="col-12 col-lg-12">
                 <div class="card radius-2 border-top border-0 border-2 border-primary">
@@ -59,14 +101,13 @@ watch([search, perPage], () => {
                         <div class="card-title d-flex justify-content-between justify-center align-items-center"
                             style="margin-bottom: 0;">
                             <h6 class="mb-0 text-primary d-flex align-items-center">
-                                <a href="javascript:;" class="me-2"><i class="fadeIn animated bx bx-list-ul"></i></a>
-                                Plan List
+                                <a href="javascript:;" class="me-2"><i class="fadeIn animated bx bx-list-ul"></i>Plan
+                                    List</a>
                             </h6>
-                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#exampleModal"><i class="fadeIn animated bx bx-plus-medical"
-                                    style="font-size: small;"></i>Add Plan</button>
+                            <button class="btn btn-primary btn-sm" @click="createSubscription"><i
+                                    class="fadeIn animated bx bx-plus-medical" style="font-size: small;"></i>Add
+                                Plan</button>
                         </div>
-
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -87,7 +128,7 @@ watch([search, perPage], () => {
                                     <div class="col-sm-12 col-md-6">
                                         <div id="example_filter" class="dataTables_filter">
                                             <label>Search:<input v-model="search" type="search"
-                                                    class="form-control form-control-sm" placeholder=""
+                                                    class="form-control form-control-sm" placeholder="Search ..."
                                                     aria-controls="example"></label>
                                         </div>
                                     </div>
@@ -123,9 +164,9 @@ watch([search, perPage], () => {
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <Link :href="`/plans/${plan.id}/edit`" class="text-primary"><i
-                                                            class="fadeIn animated bx bx-edit hover:opacity-90"
-                                                            style="font-size: larger;"></i></Link>
+                                                        <a @click="openEdit(plan)" class="text-primary"><i
+                                                                class="fadeIn animated bx bx-edit hover:opacity-90"
+                                                                style="font-size: larger;"></i></a>
                                                         <Link :href="`/plans/${plan.id}`" class="text-danger"><i
                                                             class="fadeIn animated bx bx-trash hover:opacity-90"
                                                             style="font-size: larger;"></i></Link>
@@ -161,66 +202,120 @@ watch([search, perPage], () => {
                 </div>
             </div>
 
-            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel"><i
-                                    class="fadeIn animated bx bx-message-alt-add"></i> Add Subscription Plans</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-body">
-                                    <form @submit.prevent="submit" class="row">
-                                        <div class="col-12 mb-2">
-                                            <Label for="name" class="mb-1">Name</Label>
-                                            <Input id="name" type="email"
-                                                :class="[form.errors.name ? 'border-danger mb-2' : '']" required
-                                                autofocus :tabindex="1" autocomplete="email" v-model="form.name"
-                                                placeholder="premium" />
-                                            <InputError :message="form.errors.name" />
-                                        </div>
+            <transition name="modal">
+                <div class="modal-backdrop" v-if="showModal"></div>
+            </transition>
 
-                                        <div class="col-12">
-                                            <Label for="name" class="mb-1">Price</Label>
-                                            <Input id="name" type="number"
-                                                :class="[form.errors.name ? 'border-danger mb-1' : '']" required
-                                                autofocus :tabindex="1" autocomplete="email" v-model="form.name"
-                                                placeholder="premium" />
-                                            <InputError :message="form.errors.name" />
-                                        </div>
-
-                                        <div class="col-12">
-                                            <Label for="name" class="mb-1">Duration</Label>
-                                            <Input id="name" type="number"
-                                                :class="[form.errors.name ? 'border-danger mb-1' : '']" required
-                                                autofocus :tabindex="1" autocomplete="email" v-model="form.name"
-                                                placeholder="premium" />
-                                            <InputError :message="form.errors.name" />
-                                        </div>
-
-                                        <div class="col-12 mb-2">
-                                            <Label for="name" class="mb-1">Interval</Label>
-                                            <Input id="name" type="email"
-                                                :class="[form.errors.name ? 'border-danger mb-2' : '']" required
-                                                autofocus :tabindex="1" autocomplete="email" v-model="form.name"
-                                                placeholder="premium" />
-                                            <InputError :message="form.errors.name" />
-                                        </div>
-
-                                    </form>
-
+            <transition name="slide-fade">
+                <div class="modal d-block" v-if="showModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header" style="border-top: 2px solid #004882;">
+                                <h6 class="modal-title"><i class="bx bx-message-alt-add me-2"></i> {{ editingPlan ?
+                                    'Update Subscription Plan' : 'Add Subscription Plan' }}
+                                </h6>
+                                <button type="button" class="btn-close" @click="showModal = false"></button>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary btn-sm"
-                                data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary btn-sm">Save changes</button>
+                            <form @submit.prevent="submit">
+                                <div class="modal-body row">
+                                    <div class="col-12 mb-2">
+                                        <label for="name" class="form-label">Name</label>
+                                        <Input id="name" type="text" v-model="form.name"
+                                            :class="[form.errors.name ? 'border-danger mb-1' : '']" class="form-control"
+                                            placeholder="Premium" />
+                                        <InputError :message="form.errors.name" />
+                                    </div>
+                                    <div class="col-12 mb-2">
+                                        <label for="price" class="form-label">Price</label>
+                                        <Input id="price" type="number" v-model="form.price"
+                                            :class="[form.errors.price ? 'border-danger mb-1' : '']" class="form-control"
+                                            placeholder="500" />
+                                        <InputError :message="form.errors.price" />
+                                    </div>
+                                    <div class="col-12 mb-2">
+                                        <label for="duration" class="form-label">Duration</label>
+                                        <Input id="duration" type="number" v-model="form.duration"
+                                            :class="[form.errors.duration ? 'border-danger mb-1' : '']"
+                                            class="form-control" placeholder="90" />
+                                        <InputError :message="form.errors.duration" />
+                                    </div>
+                                    <div class="col-12 mb-2">
+                                        <label for="interval" class="form-label">Interval</label>
+                                        <Input id="interval" type="text" v-model="form.interval"
+                                            :class="[form.errors.interval ? 'border-danger mb-1' : '']"
+                                            class="form-control" placeholder="Month" />
+                                        <InputError :message="form.errors.interval" />
+                                    </div>
+
+                                    <div class="col-12 mb-2">
+                                        <label for="interval" class="form-label">Status</label>
+                                        <select class="single-select form-control"
+                                            :class="[form.errors.is_active ? 'border-danger mb-1' : '']"
+                                            v-model="form.is_active">
+                                            <option value="">Seelct status</option>
+                                            <option :value="true">Active</option>
+                                            <option :value="false">Inactive</option>
+                                        </select>
+                                        <InputError :message="form.errors.is_active" />
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                        @click="showModal = false">Close</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">{{ editingPlan ? 'Update' :
+                                        'Save' }}</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
-            </div>
+            </transition>
         </div>
     </AppLayout1>
 </template>
+
+<style scoped>
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+    transition: all 0.3s ease;
+}
+
+.slide-fade-enter-from {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+.slide-fade-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+
+.modal {
+    position: fixed;
+    inset: 0;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+</style>
