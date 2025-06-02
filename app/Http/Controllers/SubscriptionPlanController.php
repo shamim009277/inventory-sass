@@ -9,9 +9,6 @@ use App\Http\Requests\SubscriptionPlanRequest;
 
 class SubscriptionPlanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $query = SubscriptionPlan::query();
@@ -19,9 +16,9 @@ class SubscriptionPlanController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('price', 'like', "%{$search}%")
-                    ->orWhere('duration', 'like', "%{$search}%")
-                    ->orWhere('interval', 'like', "%{$search}%");
+                  ->orWhere('price', 'like', "%{$search}%")
+                  ->orWhere('duration', 'like', "%{$search}%")
+                  ->orWhere('interval', 'like', "%{$search}%");
 
                 if (strtolower($search) === 'active') {
                     $q->orWhere('is_active', true);
@@ -42,63 +39,25 @@ class SubscriptionPlanController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(SubscriptionPlanRequest $request)
     {
-        try {
-            SubscriptionPlan::create($request->validated());
-            return redirect()->back()->with('success', 'Subscription Plan created successfully.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
+        SubscriptionPlan::create($request->validated());
+        return redirect()->back()->with('success', 'Subscription Plan created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(SubscriptionPlanRequest $request, $id)
     {
-        try {
-            $plan = SubscriptionPlan::findOrFail($id);
-            $plan->update($request->validated());
-            return redirect()->back()->with('success', 'Subscription Plan updated successfully.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
+        $plan = SubscriptionPlan::findOrFail($id);
+        $plan->update($request->validated());
+        return redirect()->back()->with('success', 'Subscription Plan updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $plan = SubscriptionPlan::findOrFail($id);
+        $plan->delete();
+
+        return redirect()->back()->with('success', 'Subscription Plan deleted successfully.');
     }
 
     public function updateStatus(Request $request, SubscriptionPlan $plan)
@@ -106,7 +65,6 @@ class SubscriptionPlanController extends Controller
         $plan->update([
             'is_active' => $request->boolean('is_active')
         ]);
-
         return redirect()->back()->with('success', 'Status changed successfully.');
     }
 }

@@ -1,133 +1,20 @@
-<script setup>
-import AppLayout1 from '@/layouts/AppLayout1.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
-import InputError from '@/components/InputError.vue';
-import { Input } from '@/components/ui/input';
-import Swal from 'sweetalert2';
-
-
-const props = defineProps({
-    plans: Object,
-    filters: Object
-});
-
-const search = ref(props.filters.search || '');
-const perPage = ref(props.filters.perPage || 10);
-
-const showModal = ref(false);
-const editingPlan = ref(false);
-
-const form = useForm({
-    name: '',
-    price: '',
-    duration: '',
-    description: '',
-    interval: '',
-    is_active: true
-});
-
-const createSubscription = () => {
-    showModal.value = true;
-    editingPlan.value = false;
-    form.reset();
-}
-
-const openEdit = (plan) => {
-    showModal.value = true;
-    editingPlan.value = plan;
-
-    form.name = plan.name;
-    form.price = plan.price;
-    form.duration = plan.duration;
-    form.description = plan.description;
-    form.interval = plan.interval;
-    form.is_active = plan.is_active;
-
-}
-
-const updateStatus = (plan) => {
-    router.put(`/plans/${plan.id}/status`, {
-        is_active: plan.is_active
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-
-        },
-    });
-}
-
-const confirmDelete = (id) => {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e3342f',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, delete it!',
-    }).then((result) => {
-        if (result.isConfirmed) {
-            router.delete(`/subscription-plans/${id}`, {
-                preserveScroll: true,
-                onSuccess: () => {
-
-                },
-                onError: () => {
-
-                }
-            })
-        }
-    })
-}
-
-const submit = () => {
-    if (editingPlan.value) {
-        form.put(`/subscription-plans/${editingPlan.value.id}`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                form.reset();
-                showModal.value = false;
-            }
-        });
-    } else {
-        form.post('/subscription-plans', {
-            preserveScroll: true,
-            onSuccess: () => {
-                form.reset();
-                showModal.value = false;
-            }
-        });
-    }
-};
-
-// Watchers
-watch([search, perPage], () => {
-    router.get(route('subscription-plans.index'), {
-        search: search.value,
-        perPage: perPage.value,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
-});
-</script>
 <template>
 
-    <Head title="Subscription Plan" />
+    <Head title="Module" />
     <AppLayout1>
         <div class="row">
             <div class="col-lg-12">
-                <h4 class="mb-3 text-primary text-center font-bold">Subscription Plans</h4>
+                <h4 class="mb-3 text-primary text-center font-bold">Modules</h4>
             </div>
             <div class="col-12 col-lg-12">
                 <div class="card radius-2 border-top border-0 border-2 border-primary">
                     <div class="card-header">
-                        <div class="card-title d-flex justify-content-between justify-center align-items-center" style="margin-bottom: 0;">
+                        <div class="card-title d-flex justify-content-between justify-center align-items-center"
+                            style="margin-bottom: 0;">
                             <h6 class="mb-0 text-primary d-flex align-items-center">
-                                <a href="javascript:;" class="me-2"><i class="fadeIn animated bx bx-list-ul"></i>Plan List</a>
+                                <a href="javascript:;" class="me-2"><i class="fadeIn animated bx bx-list-ul"></i>Module List</a>
                             </h6>
-                            <button class="btn btn-primary btn-sm" @click="createSubscription"><i class="fadeIn animated bx bx-plus-medical" style="font-size: small;"></i>Add Plan</button>
+                            <button class="btn btn-primary btn-sm" @click="createModule"><i class="fadeIn animated bx bx-plus-medical" style="font-size: small;"></i>Add Module</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -163,30 +50,29 @@ watch([search, perPage], () => {
                                                 <tr role="row">
                                                     <th>Sl</th>
                                                     <th>Name</th>
-                                                    <th>Price</th>
-                                                    <th>Duration</th>
-                                                    <th>Interval</th>
-                                                    <th>Status</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr v-for="(plan, index) in plans.data" :key="plan.id">
+                                                <tr v-for="(module, index) in moduleList" :key="module.id">
                                                     <td>{{ index + 1 }}</td>
-                                                    <td>{{ plan.name }}</td>
-                                                    <td>{{ plan.price }}</td>
-                                                    <td>{{ plan.duration }}</td>
-                                                    <td>{{ plan.interval }}</td>
+                                                    <td>{{ module.name }}</td>
                                                     <td>
                                                         <div class="form-check form-switch">
                                                             <input class="form-check-input" type="checkbox"
-                                                                id="flexSwitchCheckChecked" v-model="plan.is_active"
-                                                                @change="updateStatus(plan)" :checked="plan.is_active">
+                                                                id="flexSwitchCheckChecked" v-model="module.is_active"
+                                                                @change="updateStatus(module)" :checked="module.is_active">
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <a @click="openEdit(plan)" class="text-primary" style="cursor: pointer;"><i class="fadeIn animated bx bx-edit hover:opacity-90" style="font-size: larger;"></i></a>
-                                                        <a @click.prevent="confirmDelete(plan.id)" class="text-danger" style="cursor: pointer;"><i class="fadeIn animated bx bx-trash hover:opacity-90" style="font-size: larger;"></i></a>
+                                                        <a @click="openEdit(module)" class="text-primary"
+                                                            style="cursor: pointer;"><i
+                                                                class="fadeIn animated bx bx-edit hover:opacity-90"
+                                                                style="font-size: larger;"></i></a>
+                                                        <a @click.prevent="confirmDelete(module.id)" class="text-danger"
+                                                            style="cursor: pointer;"><i
+                                                                class="fadeIn animated bx bx-trash hover:opacity-90"
+                                                                style="font-size: larger;"></i></a>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -197,13 +83,13 @@ watch([search, perPage], () => {
                                 <div class="row">
                                     <div class="col-sm-12 col-md-5">
                                         <div class="dataTables_info" role="status" aria-live="polite">
-                                            Showing {{ plans.from }} to {{ plans.to }} of {{ plans.total }} entries
+                                            Showing {{ modules.from }} to {{ modules.to }} of {{ modules.total }} entries
                                         </div>
                                     </div>
                                     <div class="col-sm-12 col-md-7">
                                         <div class="dataTables_paginate paging_simple_numbers">
                                             <ul class="pagination" style="display: flex; gap: 4px;">
-                                                <li v-for="link in plans.links" :key="link.label"
+                                                <li v-for="link in modules.links" :key="link.label"
                                                     class="paginate_button page-item"
                                                     :class="{ active: link.active, disabled: !link.url }">
                                                     <Link :href="link.url || '#'" v-html="link.label" class="page-link"
@@ -242,27 +128,6 @@ watch([search, perPage], () => {
                                             placeholder="Premium" />
                                         <InputError :message="form.errors.name" />
                                     </div>
-                                    <div class="col-12 mb-2">
-                                        <label for="price" class="form-label">Price</label>
-                                        <Input id="price" type="number" v-model="form.price"
-                                            :class="[form.errors.price ? 'border-danger mb-1' : '']" class="form-control"
-                                            placeholder="500" />
-                                        <InputError :message="form.errors.price" />
-                                    </div>
-                                    <div class="col-12 mb-2">
-                                        <label for="duration" class="form-label">Duration</label>
-                                        <Input id="duration" type="number" v-model="form.duration"
-                                            :class="[form.errors.duration ? 'border-danger mb-1' : '']"
-                                            class="form-control" placeholder="90" />
-                                        <InputError :message="form.errors.duration" />
-                                    </div>
-                                    <div class="col-12 mb-2">
-                                        <label for="interval" class="form-label">Interval</label>
-                                        <Input id="interval" type="text" v-model="form.interval"
-                                            :class="[form.errors.interval ? 'border-danger mb-1' : '']"
-                                            class="form-control" placeholder="Month" />
-                                        <InputError :message="form.errors.interval" />
-                                    </div>
 
                                     <div class="col-12 mb-2">
                                         <label for="interval" class="form-label">Status</label>
@@ -291,6 +156,106 @@ watch([search, perPage], () => {
         </div>
     </AppLayout1>
 </template>
+
+<script setup>
+import AppLayout1 from '@/layouts/AppLayout1.vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+import InputError from '@/components/InputError.vue';
+import { Input } from '@/components/ui/input';
+import Swal from 'sweetalert2';
+
+const props = defineProps({
+    modules: Object,
+    filters: Object
+});
+
+const search = ref(props.filters.search || '');
+const perPage = ref(props.filters.perPage || 10);
+
+const showModal = ref(false);
+const editingModule = ref(false);
+const moduleList = ref([...props.modules.data]);
+
+const form = useForm({
+    name: '',
+    is_active: true
+});
+
+const createModule = () => {
+    showModal.value = true;
+    editingModule.value = false;
+    form.reset();
+}
+
+const openEdit = (module) => {
+    showModal.value = true;
+    editingModule.value = module;
+
+    form.name = module.name;
+    form.is_active = module.is_active;
+}
+
+const updateStatus = (module) => {
+    router.put(`/modules/${module.id}/status`, {
+        is_active: module.is_active
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+
+        },
+    });
+}
+
+const submit = () => {
+    if (editingModule.value) {
+        form.put(`/modules/${editingModule.value.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                showModal.value = false;
+            }
+        });
+    } else {
+        form.post('/modules', {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                showModal.value = false;
+            }
+        });
+    }
+};
+
+const confirmDelete = (id) => {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e3342f',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, delete it!',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Optimistically remove from UI (optional)
+      props.modules.data = props.modules.data.filter(m => m.id !== id);
+      // Send delete request
+      router.delete(`/modules/${id}`, {
+        preserveScroll: true,
+        onSuccess: () => {
+          // Ensure backend list syncs with frontend
+          router.reload({ only: ['modules'] });
+        }
+      });
+    }
+  });
+};
+
+watch(() => props.modules.data, (newData) => {
+  moduleList.value = newData;
+});
+</script>
 
 <style scoped>
 .modal-backdrop {

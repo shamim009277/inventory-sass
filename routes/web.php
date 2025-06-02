@@ -2,6 +2,8 @@
 
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\BusinessSettingController;
 use App\Http\Controllers\SubscriptionPlanController;
 
 Route::get('/', function () {
@@ -15,6 +17,8 @@ Route::get('dashboard', function () {
 Route::middleware(['auth'])->group(function () {
     Route::put('/plans/{plan}/status', [SubscriptionPlanController::class, 'updateStatus']);
     Route::resource('subscription-plans', SubscriptionPlanController::class);
+    Route::resource('business-settings', BusinessSettingController::class);
+    Route::resource('modules', ModuleController::class);
 });
 
 require __DIR__.'/settings.php';

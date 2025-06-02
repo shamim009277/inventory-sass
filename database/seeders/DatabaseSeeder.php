@@ -6,6 +6,7 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\SubscriptionPlan;
+use App\Models\Module;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,6 +21,7 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
-        SubscriptionPlan::factory(10)->create();
+        //SubscriptionPlan::factory(10)->create();
+        Module::factory(10)->create();
     }
 }
