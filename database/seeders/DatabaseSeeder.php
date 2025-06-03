@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
-        //SubscriptionPlan::factory(10)->create();
+        //SubscriptionPlan::factory(20)->create();
         Module::factory(10)->create();
     }
 }

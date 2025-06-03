@@ -18,6 +18,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/plans/{plan}/status', [SubscriptionPlanController::class, 'updateStatus']);
     Route::resource('subscription-plans', SubscriptionPlanController::class);
     Route::resource('business-settings', BusinessSettingController::class);
+
+    Route::put('/modules/{module}/status', [ModuleController::class, 'updateStatus']);
     Route::resource('modules', ModuleController::class);
 });
 

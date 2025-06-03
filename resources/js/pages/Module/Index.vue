@@ -1,8 +1,137 @@
+<script setup>
+import AppLayout1 from '@/layouts/AppLayout1.vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+import InputError from '@/components/InputError.vue';
+import { Input } from '@/components/ui/input';
+import Swal from 'sweetalert2';
+import Breadcrumb from '@/components/Breadcrumb.vue';
+import Pagination from '@/components/Pagination.vue';
+import TableSearchFilter from '@/components/TableSearchFilter.vue';
+
+const props = defineProps({
+    modules: Object,
+    filters: Object
+});
+
+const breadcrumbItems = [
+    {
+        title: 'Setting',
+        href: '#',
+    },
+    {
+        title: 'Modules',
+        href: '/modules',
+    },
+];
+
+const search = ref(props.filters.search || '');
+const perPage = ref(props.filters.perPage || 10);
+const showModal = ref(false);
+const editingModule = ref(false);
+const moduleList = ref([...props.modules.data]);
+
+const form = useForm({
+    name: '',
+    is_active: true
+});
+
+const createModule = () => {
+    showModal.value = true;
+    editingModule.value = false;
+    form.reset();
+};
+
+const openEdit = (module) => {
+    showModal.value = true;
+    editingModule.value = module;
+    form.name = module.name;
+    form.is_active = module.is_active;
+};
+
+const updateStatus = (module) => {
+    router.put(`/modules/${module.id}/status`, {
+        is_active: module.is_active
+    }, {
+        preserveScroll: true,
+    });
+};
+
+const submit = () => {
+    if (editingModule.value) {
+        form.put(`/modules/${editingModule.value.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                showModal.value = false;
+            }
+        });
+    } else {
+        form.post('/modules', {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                showModal.value = false;
+            }
+        });
+    }
+};
+
+const confirmDelete = (id) => {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You are about to delete this module!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e3342f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.get(`/modules/${id}`, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: 'Module deleted successfully.',
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    form.reset();
+                    showModal.value = false;
+                },
+                onError: () => {
+                    Swal.fire('Error!', 'Something went wrong.', 'error');
+                }
+            });
+        }
+    });
+};
+
+watch([search, perPage], ([newSearch, newPerPage]) => {
+    router.get(route('modules.index'), {
+        search: newSearch,
+        perPage: newPerPage,
+    }, {
+        preserveState: true,
+        replace: true,
+    });
+});
+
+
+watch(() => props.modules.data, (newData) => {
+    moduleList.value = newData;
+});
+</script>
+
 <template>
 
     <Head title="Module" />
     <AppLayout1>
         <div class="row">
+            <Breadcrumb :breadcrumbItems="breadcrumbItems" title="Modules" />
+
             <div class="col-lg-12">
                 <h4 class="mb-3 text-primary text-center font-bold">Modules</h4>
             </div>
@@ -20,37 +149,17 @@
                     <div class="card-body">
                         <div class="table-responsive">
                             <div id="example_wrapper" class="dataTables_wrapper dt-bootstrap5">
-                                <div class="row">
-                                    <div class="col-sm-12 col-md-6">
-                                        <div class="dataTables_length" id="example_length">
-                                            <label>Show
-                                                <select v-model="perPage" name="example_length" aria-controls="example"
-                                                    class="form-select form-select-sm">
-                                                    <option value="10">10</option>
-                                                    <option value="25">25</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                </select> entries</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-6">
-                                        <div id="example_filter" class="dataTables_filter">
-                                            <label>Search:<input v-model="search" type="search"
-                                                    class="form-control form-control-sm" placeholder="Search ..."
-                                                    aria-controls="example"></label>
-                                        </div>
-                                    </div>
-                                </div>
+                                <TableSearchFilter v-model:perPage="perPage" v-model:search="search" />
 
                                 <div class="row">
                                     <div class="col-sm-12">
-                                        <table id="example" class="table table-striped table-bordered dataTable"
-                                            style="width: 100%;" role="grid" aria-describedby="example_info">
+                                        <table id="example" class="table table-striped table-bordered dataTable" style="width: 100%;" role="grid" aria-describedby="example_info">
                                             <thead>
                                                 <tr role="row">
-                                                    <th>Sl</th>
-                                                    <th>Name</th>
-                                                    <th>Action</th>
+                                                    <th width="10%">Sl</th>
+                                                    <th width="50%">Name</th>
+                                                    <th width="30%">Status</th>
+                                                    <th width="10%">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -61,7 +170,8 @@
                                                         <div class="form-check form-switch">
                                                             <input class="form-check-input" type="checkbox"
                                                                 id="flexSwitchCheckChecked" v-model="module.is_active"
-                                                                @change="updateStatus(module)" :checked="module.is_active">
+                                                                @change="updateStatus(module)"
+                                                                :checked="module.is_active">
                                                         </div>
                                                     </td>
                                                     <td>
@@ -80,25 +190,7 @@
                                     </div>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-sm-12 col-md-5">
-                                        <div class="dataTables_info" role="status" aria-live="polite">
-                                            Showing {{ modules.from }} to {{ modules.to }} of {{ modules.total }} entries
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-7">
-                                        <div class="dataTables_paginate paging_simple_numbers">
-                                            <ul class="pagination" style="display: flex; gap: 4px;">
-                                                <li v-for="link in modules.links" :key="link.label"
-                                                    class="paginate_button page-item"
-                                                    :class="{ active: link.active, disabled: !link.url }">
-                                                    <Link :href="link.url || '#'" v-html="link.label" class="page-link"
-                                                        :class="{ 'bg-primary text-white': link.active, 'text-muted': !link.url }" />
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
+                               <Pagination :modules="modules" />
                             </div>
                         </div>
                     </div>
@@ -114,8 +206,8 @@
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header" style="border-top: 2px solid #004882;">
-                                <h6 class="modal-title"><i class="bx bx-message-alt-add me-2"></i> {{ editingPlan ?
-                                    'Update Subscription Plan' : 'Add Subscription Plan' }}
+                                <h6 class="modal-title"><i class="bx bx-message-alt-add me-2"></i> {{ editingModule ?
+                                    'Update Module' : 'Add Module' }}
                                 </h6>
                                 <button type="button" class="btn-close" @click="showModal = false"></button>
                             </div>
@@ -143,10 +235,8 @@
 
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary btn-sm"
-                                        @click="showModal = false">Close</button>
-                                    <button type="submit" class="btn btn-primary btn-sm">{{ editingPlan ? 'Update' :
-                                        'Save' }}</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" @click="showModal = false">Close</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">{{ editingPlan ? 'Update' :'Save' }}</button>
                                 </div>
                             </form>
                         </div>
@@ -156,106 +246,6 @@
         </div>
     </AppLayout1>
 </template>
-
-<script setup>
-import AppLayout1 from '@/layouts/AppLayout1.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
-import InputError from '@/components/InputError.vue';
-import { Input } from '@/components/ui/input';
-import Swal from 'sweetalert2';
-
-const props = defineProps({
-    modules: Object,
-    filters: Object
-});
-
-const search = ref(props.filters.search || '');
-const perPage = ref(props.filters.perPage || 10);
-
-const showModal = ref(false);
-const editingModule = ref(false);
-const moduleList = ref([...props.modules.data]);
-
-const form = useForm({
-    name: '',
-    is_active: true
-});
-
-const createModule = () => {
-    showModal.value = true;
-    editingModule.value = false;
-    form.reset();
-}
-
-const openEdit = (module) => {
-    showModal.value = true;
-    editingModule.value = module;
-
-    form.name = module.name;
-    form.is_active = module.is_active;
-}
-
-const updateStatus = (module) => {
-    router.put(`/modules/${module.id}/status`, {
-        is_active: module.is_active
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-
-        },
-    });
-}
-
-const submit = () => {
-    if (editingModule.value) {
-        form.put(`/modules/${editingModule.value.id}`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                form.reset();
-                showModal.value = false;
-            }
-        });
-    } else {
-        form.post('/modules', {
-            preserveScroll: true,
-            onSuccess: () => {
-                form.reset();
-                showModal.value = false;
-            }
-        });
-    }
-};
-
-const confirmDelete = (id) => {
-  Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#e3342f',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Yes, delete it!',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // Optimistically remove from UI (optional)
-      props.modules.data = props.modules.data.filter(m => m.id !== id);
-      // Send delete request
-      router.delete(`/modules/${id}`, {
-        preserveScroll: true,
-        onSuccess: () => {
-          // Ensure backend list syncs with frontend
-          router.reload({ only: ['modules'] });
-        }
-      });
-    }
-  });
-};
-
-watch(() => props.modules.data, (newData) => {
-  moduleList.value = newData;
-});
-</script>
 
 <style scoped>
 .modal-backdrop {
