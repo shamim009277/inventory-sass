@@ -68,13 +68,26 @@ const confirmDelete = (id) => {
         confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
         if (result.isConfirmed) {
-            router.delete(`/subscription-plans/${id}`, {
+            form.delete(`/subscription-plans/${id}`, {
                 preserveScroll: true,
+                preserveState: true,
                 onSuccess: () => {
-
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: 'Plan deleted successfully.',
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 1500
+                    })
                 },
                 onError: () => {
-
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Something went wrong.',
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 1500
+                    })
                 }
             })
         }

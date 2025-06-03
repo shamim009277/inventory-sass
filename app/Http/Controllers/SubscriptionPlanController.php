@@ -57,7 +57,7 @@ class SubscriptionPlanController extends Controller
         $plan = SubscriptionPlan::findOrFail($id);
         $plan->delete();
 
-        return redirect()->back()->with('success', 'Subscription Plan deleted successfully.');
+        return redirect()->back();
     }
 
     public function updateStatus(Request $request, SubscriptionPlan $plan)

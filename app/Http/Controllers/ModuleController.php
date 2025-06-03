@@ -23,7 +23,7 @@ class ModuleController extends Controller
             });
         }
 
-        $perPage = $request->perPage ?? 5;
+        $perPage = $request->perPage ?? 10;
 
         return Inertia::render('Module/Index', [
             'modules' => $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString(),
@@ -32,14 +32,6 @@ class ModuleController extends Controller
                 'perPage' => $perPage,
             ],
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -60,32 +52,38 @@ class ModuleController extends Controller
      */
     public function show(string $id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        $module = Module::findOrFail($id);
+        $module->delete();
+        return redirect()->back()->with('success', 'Module deleted successfully.');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(ModuleRequest $request, string $id)
     {
-        //
+        try {
+            $module = Module::findOrFail($id);
+            $module->update($request->validated());
+            return redirect()->route('modules.index')->with('success', 'Module updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update module: ' . $e->getMessage());
+        }
     }
-
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(module $module)
     {
         $module->delete();
-
         return redirect()->back()->with('success', 'Module deleted successfully.');
+    }
+
+    public function updateStatus(Request $request, Module $module)
+    {
+        $module->update([
+            'is_active' => $request->boolean('is_active')
+        ]);
+        return redirect()->back()->with('success', 'Status changed successfully.');
     }
 }
